@@ -1,10 +1,4 @@
-import axios from "axios";
-
-
-const API_URL =
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:3000";
-
+import API from "./api";
 
 /*
 |--------------------------------------------------------------------------
@@ -13,18 +7,9 @@ const API_URL =
 */
 
 export const generateEmail = async (data) => {
-
-    const response = await axios.post(
-        `${API_URL}/api/email/generate`,
-        data,
-        {
-            withCredentials: true
-        }
-    );
-
+    const response = await API.post("/email/generate", data);
     return response.data;
 };
-
 
 /*
 |--------------------------------------------------------------------------
@@ -33,14 +18,6 @@ export const generateEmail = async (data) => {
 */
 
 export const toggleSaveEmail = async (id) => {
-
-    const response = await axios.patch(
-        `${API_URL}/api/email/${id}/save`,
-        {},
-        {
-            withCredentials: true
-        }
-    );
-
+    const response = await API.patch(`/email/${id}/save`);
     return response.data;
 };

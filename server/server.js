@@ -19,10 +19,28 @@ const app = express();
 connectDB();
 
 
-// Middleware
+const rawClientUrl = process.env.CLIENT_URL || "";
+const clientOrigins = rawClientUrl
+    .split(",")
+    .map((url) => url.trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+
+const allowedOrigins = [
+    ...clientOrigins,
+    "http://localhost:5173",
+    "http://localhost:3000"
+];
+
 app.use(
     cors({
-        origin: process.env.CLIENT_URL,
+        origin: (origin, callback) => {
+            if (!origin) return callback(null, true);
+            const cleanOrigin = origin.replace(/\/+$/, "");
+            if (allowedOrigins.length === 0 || allowedOrigins.includes(cleanOrigin)) {
+                return callback(null, true);
+            }
+            return callback(null, true);
+        },
         credentials: true
     })
 );

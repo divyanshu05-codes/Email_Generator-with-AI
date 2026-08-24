@@ -1,18 +1,6 @@
-import axios from "axios";
-
-const api = axios.create({
-    baseURL:
-        import.meta.env.VITE_API_URL
-            ? `${import.meta.env.VITE_API_URL}/api`
-            : "http://localhost:3000/api",
-    withCredentials: true
-});
+import API from "./api";
 
 export const getDashboardStats = async () => {
-
-    const response = await api.get(
-        "/email/stats"
-    );
-
+    const response = await API.get("/email/stats");
     return response.data;
 };

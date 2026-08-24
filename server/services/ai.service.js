@@ -77,7 +77,7 @@ Body:
         try {
 
             response = await ai.models.generateContent({
-                model: "gemini-3.6-flash",
+                model: "gemini-2.5-flash",
                 contents: prompt
             });
 
@@ -178,7 +178,7 @@ Return only the reply email.
 `;
 
     const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: prompt
     });
 

@@ -1,13 +1,4 @@
-import axios from "axios";
-
-const API = axios.create({
-    baseURL:
-        import.meta.env.VITE_API_URL ||
-        "http://localhost:3000/api",
-
-    withCredentials: true
-});
-
+import API from "./api";
 
 /*
 |--------------------------------------------------------------------------
@@ -16,14 +7,9 @@ const API = axios.create({
 */
 
 export const getEmailHistory = async () => {
-
-    const response = await API.get(
-        "/history"
-    );
-
+    const response = await API.get("/history");
     return response.data;
 };
-
 
 /*
 |--------------------------------------------------------------------------
@@ -32,14 +18,9 @@ export const getEmailHistory = async () => {
 */
 
 export const getSingleEmail = async (id) => {
-
-    const response = await API.get(
-        `/history/${id}`
-    );
-
+    const response = await API.get(`/history/${id}`);
     return response.data;
 };
-
 
 /*
 |--------------------------------------------------------------------------
@@ -48,14 +29,9 @@ export const getSingleEmail = async (id) => {
 */
 
 export const deleteEmail = async (id) => {
-
-    const response = await API.delete(
-        `/history/${id}`
-    );
-
+    const response = await API.delete(`/history/${id}`);
     return response.data;
 };
-
 
 /*
 |--------------------------------------------------------------------------
@@ -64,10 +40,6 @@ export const deleteEmail = async (id) => {
 */
 
 export const toggleSaveEmail = async (id) => {
-
-    const response = await API.patch(
-        `/email/${id}/save`
-    );
-
+    const response = await API.patch(`/email/${id}/save`);
     return response.data;
 };
