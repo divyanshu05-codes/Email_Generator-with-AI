@@ -1,31 +1,18 @@
 import { useEffect, useState } from "react";
-import {
-    NavLink,
-    Outlet,
-    useNavigate
-} from "react-router-dom";
-
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const MainLayout = () => {
-
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
     const [darkMode, setDarkMode] = useState(() => {
-        return (
-            localStorage.getItem("mailmind-theme") ===
-            "dark"
-        );
+        return localStorage.getItem("mailmind-theme") === "dark";
     });
 
-
-    /* =========================
-       DARK MODE
-    ========================= */
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-
         document.documentElement.classList.toggle(
             "dark-mode",
             darkMode
@@ -35,49 +22,46 @@ const MainLayout = () => {
             "mailmind-theme",
             darkMode ? "dark" : "light"
         );
-
     }, [darkMode]);
 
-
-    /* =========================
-       LOGOUT
-    ========================= */
-
     const handleLogout = async () => {
-
         try {
-
             await logout();
-
-        } catch (error) {
-
-            console.error(
-                "Logout Error:",
-                error
-            );
-
-        } finally {
-
             navigate("/login");
-
+        } catch (error) {
+            console.error("Logout Error:", error);
+            navigate("/login");
         }
     };
 
+    const closeMobileMenu = () => {
+        setMobileMenuOpen(false);
+    };
 
     return (
-
         <div className="app-layout">
+
+            {/* Mobile Overlay */}
+            {mobileMenuOpen && (
+                <div
+                    className="mobile-overlay"
+                    onClick={closeMobileMenu}
+                />
+            )}
 
             {/* =========================
                 SIDEBAR
             ========================= */}
 
-            <aside className="sidebar">
+            <aside
+                className={`sidebar ${
+                    mobileMenuOpen ? "mobile-open" : ""
+                }`}
+            >
 
                 {/* Logo */}
 
                 <div className="logo">
-
                     <span className="logo-icon">
                         ✉
                     </span>
@@ -85,50 +69,61 @@ const MainLayout = () => {
                     <span className="logo-text">
                         MailMind
                     </span>
-
                 </div>
-
 
                 {/* Navigation */}
 
                 <nav className="sidebar-nav">
 
-                    <NavLink to="/dashboard">
+                    <NavLink
+                        to="/dashboard"
+                        onClick={closeMobileMenu}
+                    >
                         <span>🏠</span>
                         <span>Dashboard</span>
                     </NavLink>
 
-                    <NavLink to="/generate">
+                    <NavLink
+                        to="/generate"
+                        onClick={closeMobileMenu}
+                    >
                         <span>✨</span>
                         <span>Generate Email</span>
                     </NavLink>
 
-                    <NavLink to="/reply">
+                    <NavLink
+                        to="/reply"
+                        onClick={closeMobileMenu}
+                    >
                         <span>↩️</span>
                         <span>AI Reply</span>
                     </NavLink>
 
-                    <NavLink to="/history">
+                    <NavLink
+                        to="/history"
+                        onClick={closeMobileMenu}
+                    >
                         <span>📜</span>
                         <span>Email History</span>
                     </NavLink>
 
-                    <NavLink to="/reply-history">
+                    <NavLink
+                        to="/reply-history"
+                        onClick={closeMobileMenu}
+                    >
                         <span>↩️</span>
                         <span>Reply History</span>
                     </NavLink>
 
                 </nav>
 
-
-                {/* =========================
-                    SIDEBAR BOTTOM
-                ========================= */}
+                {/* Sidebar Bottom */}
 
                 <div className="sidebar-bottom">
 
                     <NavLink
                         to="/settings"
+                        onClick={closeMobileMenu}
                         className={({ isActive }) =>
                             isActive
                                 ? "sidebar-link active"
@@ -138,9 +133,6 @@ const MainLayout = () => {
                         <span>⚙️</span>
                         <span>Settings</span>
                     </NavLink>
-
-
-                    {/* User */}
 
                     <div className="user-info">
 
@@ -158,22 +150,19 @@ const MainLayout = () => {
 
                     </div>
 
-
-                    {/* Logout */}
-
                     <button
-                        type="button"
                         className="sidebar-logout"
                         onClick={handleLogout}
                     >
                         🚪
-                        <span>Logout</span>
+                        <span>
+                            Logout
+                        </span>
                     </button>
 
                 </div>
 
             </aside>
-
 
             {/* =========================
                 MAIN CONTENT
@@ -181,14 +170,24 @@ const MainLayout = () => {
 
             <main className="main-content">
 
-                {/* Top Navbar */}
-
                 <header className="topbar">
+
+                    {/* Mobile Menu Button */}
+
+                    <button
+                        type="button"
+                        className="mobile-menu-button"
+                        onClick={() =>
+                            setMobileMenuOpen(true)
+                        }
+                        aria-label="Open menu"
+                    >
+                        ☰
+                    </button>
 
                     <div className="topbar-title">
                         AI Email Assistant
                     </div>
-
 
                     <div className="topbar-actions">
 
@@ -198,17 +197,9 @@ const MainLayout = () => {
                             type="button"
                             className="theme-toggle"
                             onClick={() =>
-                                setDarkMode(
-                                    (previous) =>
-                                        !previous
-                                )
+                                setDarkMode(!darkMode)
                             }
                             title={
-                                darkMode
-                                    ? "Switch to light mode"
-                                    : "Switch to dark mode"
-                            }
-                            aria-label={
                                 darkMode
                                     ? "Switch to light mode"
                                     : "Switch to dark mode"
@@ -219,17 +210,14 @@ const MainLayout = () => {
                                 : "🌙"}
                         </button>
 
-
                         {/* User */}
 
                         <div className="topbar-user">
 
                             <div className="topbar-avatar">
-
                                 {user?.name
                                     ?.charAt(0)
                                     ?.toUpperCase() || "U"}
-
                             </div>
 
                             <span>
@@ -238,15 +226,13 @@ const MainLayout = () => {
 
                         </div>
 
-
-                        {/* Mobile Logout */}
+                        {/* Logout */}
 
                         <button
                             type="button"
                             className="mobile-logout"
                             onClick={handleLogout}
                             title="Logout"
-                            aria-label="Logout"
                         >
                             🚪
                         </button>
@@ -255,19 +241,15 @@ const MainLayout = () => {
 
                 </header>
 
-
-                {/* Page Content */}
+                {/* Page */}
 
                 <section className="page-content">
-
                     <Outlet />
-
                 </section>
 
             </main>
 
         </div>
-
     );
 };
 
