@@ -30,21 +30,16 @@ const generateToken = (userId) => {
 |--------------------------------------------------------------------------
 */
 
+const isProduction =
+    process.env.NODE_ENV === "production" ||
+    Boolean(process.env.RENDER) ||
+    Boolean(process.env.RENDER_EXTERNAL_URL);
+
 const cookieOptions = {
-
     httpOnly: true,
-
-    secure:
-        process.env.NODE_ENV === "production",
-
-    sameSite:
-        process.env.NODE_ENV === "production"
-            ? "none"
-            : "lax",
-
-    maxAge:
-        7 * 24 * 60 * 60 * 1000
-
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
 
@@ -287,20 +282,11 @@ const loginUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
 
-    res.clearCookie(
-        "token",
-        {
-            httpOnly: true,
-
-            secure:
-                process.env.NODE_ENV === "production",
-
-            sameSite:
-                process.env.NODE_ENV === "production"
-                    ? "none"
-                    : "lax"
-        }
-    );
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax"
+    });
 
 
     return res.json({
@@ -608,18 +594,11 @@ const deleteAccount = async (req, res) => {
 
         }
 
-        res.clearCookie(
-            "token",
-            {
-                httpOnly: true,
-                secure:
-                    process.env.NODE_ENV === "production",
-                sameSite:
-                    process.env.NODE_ENV === "production"
-                        ? "none"
-                        : "lax"
-            }
-        );
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax"
+        });
 
         return res.status(200).json({
             message:

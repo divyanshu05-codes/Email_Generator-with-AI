@@ -14,34 +14,22 @@ const replyHistoryRoutes = require("./routes/replyHistory.routes");
 
 const app = express();
 
+// Enable trust proxy for secure cookies behind Render reverse proxy
+app.set("trust proxy", 1);
 
 // MongoDB
 connectDB();
 
-
-const rawClientUrl = process.env.CLIENT_URL || "";
-const clientOrigins = rawClientUrl
-    .split(",")
-    .map((url) => url.trim().replace(/\/+$/, ""))
-    .filter(Boolean);
-
-const allowedOrigins = [
-    ...clientOrigins,
-    "http://localhost:5173",
-    "http://localhost:3000"
-];
-
+// Middleware
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin) return callback(null, true);
-            const cleanOrigin = origin.replace(/\/+$/, "");
-            if (allowedOrigins.length === 0 || allowedOrigins.includes(cleanOrigin)) {
-                return callback(null, true);
-            }
-            return callback(null, true);
+            // Allow all requests, dynamically reflecting the origin for credentials support
+            callback(null, true);
         },
-        credentials: true
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization", "Cookie", "X-Requested-With"]
     })
 );
 
