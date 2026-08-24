@@ -1,14 +1,14 @@
 const { GoogleGenAI } = require("@google/genai");
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured.");
-}
-
-const ai = new GoogleGenAI({
-    apiKey
-});
+const getAIClient = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error(
+            "GEMINI_API_KEY is not configured on the server. Please check your environment variables."
+        );
+    }
+    return new GoogleGenAI({ apiKey });
+};
 
 /*
  * Wait helper for retry logic
@@ -19,8 +19,10 @@ const sleep = (ms) => {
     });
 };
 
+const MODELS_TO_TRY = ["gemini-3.6-flash", "gemini-3.5-flash-lite"];
+
 /*
- * Generate AI email with automatic retry
+ * Generate AI email with automatic retry and model fallback
  */
 const generateEmail = async ({
     purpose,
@@ -29,6 +31,7 @@ const generateEmail = async ({
     length = "Medium",
     context = ""
 }) => {
+    const ai = getAIClient();
 
     const prompt = `
 You are an expert professional email writer.
@@ -68,86 +71,55 @@ Body:
 <email body>
 `;
 
-    let response;
+    let lastError;
 
-    const maxAttempts = 3;
+    for (const model of MODELS_TO_TRY) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                const response = await ai.models.generateContent({
+                    model,
+                    contents: prompt
+                });
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                if (response?.text) {
+                    return response.text;
+                }
+            } catch (error) {
+                lastError = error;
+                console.error(
+                    `Gemini request failed (model: ${model}, attempt ${attempt}/2):`,
+                    error.message || error
+                );
 
-        try {
+                const shouldRetry =
+                    error.status === 503 ||
+                    error.status === 429 ||
+                    (error.message && error.message.includes("high demand"));
 
-            response = await ai.models.generateContent({
-                model: "gemini-2.5-flash",
-                contents: prompt
-            });
-
-            // Successful response
-            break;
-
-        } catch (error) {
-
-            console.error(
-                `Gemini request failed (attempt ${attempt}/${maxAttempts}):`,
-                error.message
-            );
-
-            /*
-             * Retry temporary Gemini errors:
-             *
-             * 503 = Service temporarily unavailable
-             * 429 = Too many requests / rate limit
-             */
-            const shouldRetry =
-                error.status === 503 ||
-                error.status === 429;
-
-            /*
-             * If this is not a temporary error,
-             * immediately throw it.
-             */
-            if (!shouldRetry) {
-                throw error;
+                if (shouldRetry && attempt < 2) {
+                    const delay = 1000 * attempt;
+                    await sleep(delay);
+                } else {
+                    // Break out of retry loop to try the next model
+                    break;
+                }
             }
-
-            /*
-             * If we've reached the final attempt,
-             * stop retrying.
-             */
-            if (attempt === maxAttempts) {
-                throw error;
-            }
-
-            /*
-             * Exponential backoff:
-             *
-             * Attempt 1 → wait 1 second
-             * Attempt 2 → wait 2 seconds
-             */
-            const delay = 1000 * Math.pow(2, attempt - 1);
-
-            console.log(
-                `Gemini temporarily unavailable. Retrying in ${delay / 1000} seconds...`
-            );
-
-            await sleep(delay);
         }
     }
 
-    if (!response || !response.text) {
-        throw new Error(
-            "Gemini returned an empty response."
-        );
-    }
-
-    return response.text;
+    throw lastError || new Error("Failed to generate email with Gemini API.");
 };
 
+/*
+ * Generate AI reply with automatic retry and model fallback
+ */
 const generateReply = async ({
     originalEmail,
     tone,
     length,
     context
 }) => {
+    const ai = getAIClient();
 
     const prompt = `
 You are an expert professional email communication assistant.
@@ -177,12 +149,42 @@ Requirements:
 Return only the reply email.
 `;
 
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt
-    });
+    let lastError;
 
-    return response.text;
+    for (const model of MODELS_TO_TRY) {
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                const response = await ai.models.generateContent({
+                    model,
+                    contents: prompt
+                });
+
+                if (response?.text) {
+                    return response.text;
+                }
+            } catch (error) {
+                lastError = error;
+                console.error(
+                    `Gemini reply failed (model: ${model}, attempt ${attempt}/2):`,
+                    error.message || error
+                );
+
+                const shouldRetry =
+                    error.status === 503 ||
+                    error.status === 429 ||
+                    (error.message && error.message.includes("high demand"));
+
+                if (shouldRetry && attempt < 2) {
+                    const delay = 1000 * attempt;
+                    await sleep(delay);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    throw lastError || new Error("Failed to generate reply with Gemini API.");
 };
 
 module.exports = {

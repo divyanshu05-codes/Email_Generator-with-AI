@@ -91,12 +91,9 @@ const generateReplyController = async (req, res) => {
             error
         );
 
-
         return res.status(500).json({
-
             message:
-                "Failed to generate reply."
-
+                error.message || "Failed to generate reply."
         });
 
     }

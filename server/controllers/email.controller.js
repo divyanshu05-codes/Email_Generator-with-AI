@@ -100,10 +100,8 @@ const generateEmailController = async (req, res) => {
         );
 
         return res.status(500).json({
-
             message:
-                "Failed to generate email."
-
+                error.message || "Failed to generate email."
         });
 
     }
